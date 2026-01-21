@@ -31,12 +31,20 @@ This repository provides Infrastructure as Code (IaC) to deploy a 3-node k3s clu
 
 ## Prerequisites
 
-### Required Software
+### Deployment Options
 
-- **libvirt/QEMU** - Virtualization platform
-- **Packer** - v1.9.0 or later
-- **Terraform** - v1.6.0 or later
-- **Make** - Build automation
+**Option A: Local Deployment (All on NUC)**
+- Run Packer, Terraform, and kubectl directly on the NUC
+- Simplest setup, all tools on one machine
+- **Required on NUC:** libvirt/QEMU, Packer, Terraform, Make
+
+**Option B: Remote Management (Recommended)**
+- NUC runs only libvirtd + Packer (hypervisor)
+- Laptop manages cluster via SSH with containerized tools
+- Cleaner separation, minimal NUC installation
+- **Required on NUC:** libvirt/QEMU, Packer
+- **Required on Laptop:** Docker/Podman, SSH access
+- See [NUC Hypervisor Setup Guide](docs/nuc-hypervisor-setup.md)
 
 ### System Requirements
 
@@ -63,6 +71,8 @@ sudo virsh net-list --all
 
 ### Install Tools
 
+#### Option A: Local Deployment (All on NUC)
+
 **Ubuntu/Debian:**
 ```bash
 # Packer
@@ -77,7 +87,36 @@ sudo apt-get install terraform
 sudo apt-get install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
 ```
 
+#### Option B: Remote Management
+
+**On NUC:**
+```bash
+# Packer (for image building)
+curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+sudo apt-get update && sudo apt-get install packer
+
+# libvirt/QEMU (if not already installed)
+sudo apt-get install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
+
+# Configure for remote access
+sudo ./scripts/configure-libvirt-remote.sh
+```
+
+**On Laptop:**
+```bash
+# Docker (for containerized Terraform/kubectl)
+# Install Docker Desktop or Docker Engine
+
+# Verify SSH access to NUC
+ssh user@nuc-hostname 'virsh list --all'
+```
+
+See [NUC Hypervisor Setup Guide](docs/nuc-hypervisor-setup.md) for detailed remote setup.
+
 ## Quick Start
+
+### Option A: Local Deployment (All on NUC)
 
 ### 1. Clone Repository
 
@@ -141,8 +180,96 @@ This will:
 - Join workers to control plane
 - Output node IP addresses
 
-### 5. Access Cluster
+---
 
+### Option B: Remote Management (Hybrid Deployment)
+
+With this approach, the NUC only runs VMs while your laptop manages everything.
+
+### 1. Setup NUC (One-Time)
+
+See [NUC Hypervisor Setup Guide](docs/nuc-hypervisor-setup.md) for complete instructions.
+
+**Quick version:**
+```bash
+# On NUC
+git clone https://github.com/YOUR_USERNAME/k3s-homelab.git
+cd k3s-homelab
+
+# Configure libvirt for remote access
+sudo ./scripts/configure-libvirt-remote.sh
+
+# Download Ubuntu ISO
+wget https://releases.ubuntu.com/24.04/ubuntu-24.04.1-live-server-amd64.iso
+```
+
+### 2. Build Base Image (On NUC)
+
+Packer requires direct QEMU access, so run this on the NUC:
+
+```bash
+# On NUC
+cd k3s-homelab/packer/k3s-node
+packer build \
+  -var "ubuntu_iso_url=file://$HOME/ubuntu-24.04.1-live-server-amd64.iso" \
+  -var "ubuntu_iso_checksum=none" \
+  .
+```
+
+### 3. Deploy Cluster (From Laptop)
+
+**Test remote connection:**
+```bash
+# On laptop
+virsh -c qemu+ssh://user@nuc-hostname/system list --all
+```
+
+**Deploy with containerized Terraform:**
+```bash
+# On laptop
+cd k3s-homelab
+
+# Update terraform.tfvars with remote libvirt URI
+vim terraform-libvirt/terraform.tfvars
+
+# Deploy cluster
+docker run --rm \
+  -v $(PWD)/terraform-libvirt:/workspace \
+  -v ~/.ssh:/root/.ssh:ro \
+  -w /workspace \
+  -e LIBVIRT_DEFAULT_URI=qemu+ssh://user@nuc-hostname/system \
+  hashicorp/terraform:latest \
+  apply -auto-approve
+```
+
+### 4. Access Cluster (From Laptop)
+
+```bash
+# Get kubeconfig from control plane
+ssh user@nuc-hostname 'sudo cat /etc/rancher/k3s/k3s.yaml' > ~/.kube/k3s-homelab.yaml
+
+# Update server IP in kubeconfig
+sed -i 's/127.0.0.1/<control-plane-ip>/' ~/.kube/k3s-homelab.yaml
+
+# Use kubectl from container
+docker run --rm \
+  -v ~/.kube:/root/.kube:ro \
+  -e KUBECONFIG=/root/.kube/k3s-homelab.yaml \
+  bitnami/kubectl:latest \
+  get nodes
+```
+
+---
+
+## Common to Both Options
+
+---
+
+## Common to Both Options
+
+### 5. Access Your Cluster
+
+**From NUC (Local):**
 ```bash
 # SSH to control plane
 ssh ubuntu@<k3s-cp-01-ip>
@@ -154,6 +281,18 @@ sudo cat /etc/rancher/k3s/k3s.yaml
 # Then use kubectl locally
 export KUBECONFIG=~/k3s-homelab-kubeconfig.yaml
 kubectl get nodes
+```
+
+**From Laptop (Remote):**
+```bash
+# Get kubeconfig
+ssh user@nuc-hostname 'sudo cat /etc/rancher/k3s/k3s.yaml' > ~/.kube/k3s-homelab.yaml
+
+# Update server IP in kubeconfig
+sed -i 's/127.0.0.1/<control-plane-ip>/' ~/.kube/k3s-homelab.yaml
+
+# Use kubectl (containerized or local)
+kubectl --kubeconfig ~/.kube/k3s-homelab.yaml get nodes
 ```
 
 ### 6. Destroy Cluster
