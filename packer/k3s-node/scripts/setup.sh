@@ -68,6 +68,9 @@ sudo rm -rf /var/lib/cloud/instance
 sudo rm -rf /var/lib/cloud/data
 sudo rm -rf /var/lib/cloud/seed/*
 sudo rm -rf /var/log/cloud-init*
+echo "Removing hardcoded netplan config..."
+sudo rm -f /etc/netplan/50-cloud-init.yaml
+sudo rm -f /etc/netplan/*.yaml
 
 # Remove cloud-init config that forces NoCloud datasource
 sudo rm -f /etc/cloud/cloud.cfg.d/99-libvirt.cfg
