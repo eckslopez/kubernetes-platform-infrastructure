@@ -39,7 +39,7 @@ resource "libvirt_cloudinit_disk" "control_plane" {
     node_index     = count.index
   })
   meta_data = <<-EOT
-    instance-id: k3s-cp-${format("%02d", count.index + 1)}
+    instance-id: k3s-cp-${format("%02d", count.index + 1)}-${uuid()}
     local-hostname: k3s-cp-${format("%02d", count.index + 1)}
   EOT
   network_config = <<-EOT
@@ -106,7 +106,7 @@ resource "libvirt_cloudinit_disk" "worker" {
     control_plane_ip = "192.168.122.152" # Hardcoded temporarily
   })
   meta_data = <<-EOT
-    instance-id: k3s-worker-${format("%02d", count.index + 1)}
+    instance-id: k3s-worker-${format("%02d", count.index + 1)}-${uuid()}
     local-hostname: k3s-worker-${format("%02d", count.index + 1)}
   EOT
   network_config = <<-EOT
