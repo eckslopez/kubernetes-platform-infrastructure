@@ -1,0 +1,19 @@
+name: Link Check
+
+on:
+  pull_request:
+    paths:
+      - '**.md'
+  push:
+    branches: [main]
+    paths:
+      - '**.md'
+  schedule:
+    - cron: '0 9 * * 1'  # Weekly Monday 9am
+  workflow_dispatch:
+
+jobs:
+  check-links:
+    uses: eckslopez/platform-pipelines/.github/workflows/link-check.yml@main
+    with:
+      fail_on_error: false  # Don't block PRs, just warn
