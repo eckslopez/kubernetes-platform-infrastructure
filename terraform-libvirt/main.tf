@@ -10,11 +10,13 @@ resource "random_password" "k3s_token" {
   special = false
 }
 
-# Base volume (must be pre-built with Packer)
-# This data source references an existing volume instead of creating a new one
-data "libvirt_volume" "base" {
-  name = var.base_volume_name
-  pool = var.libvirt_pool
+# Base volume (built by Packer)
+# Terraform will copy the Packer-built image into the libvirt pool
+resource "libvirt_volume" "base" {
+  name   = var.base_volume_name
+  pool   = var.libvirt_pool
+  source = "/home/xlopez/libvirt_images/${var.base_volume_name}"
+  format = "qcow2"
 }
 
 # Control Plane Nodes
@@ -22,7 +24,7 @@ resource "libvirt_volume" "control_plane" {
   count          = var.control_plane_count
   name           = "k3s-cp-${format("%02d", count.index + 1)}.qcow2"
   pool           = var.libvirt_pool
-  base_volume_id = data.libvirt_volume.base.id
+  base_volume_id = libvirt_volume.base.id
   size           = var.disk_size
   format         = "qcow2"
 }
@@ -96,7 +98,7 @@ resource "libvirt_volume" "worker" {
   count          = var.worker_count
   name           = "k3s-worker-${format("%02d", count.index + 1)}.qcow2"
   pool           = var.libvirt_pool
-  base_volume_id = data.libvirt_volume.base.id
+  base_volume_id = libvirt_volume.base.id
   size           = var.disk_size
   format         = "qcow2"
 }
