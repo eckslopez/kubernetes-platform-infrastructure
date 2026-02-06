@@ -82,10 +82,18 @@ For detailed architecture, see [docs/architecture.md](docs/architecture.md)
 
 ## Common Operations
 
-**Rebuild cluster:**
+**First-time setup (kubectl access):**
 ```bash
 cd terraform-libvirt
-docker compose run --rm terraform destroy
+./scripts/setup-kubectl-tunnel.sh
+export KUBECONFIG=~/.kube/kpi.yaml
+kubectl get nodes
+```
+
+**Rebuild cluster (preserves base image):**
+```bash
+cd terraform-libvirt
+./scripts/destroy-cluster.sh  # Safe destroy, preserves base volume
 docker compose run --rm terraform apply
 # ~5 minutes to fresh cluster
 ```
@@ -97,16 +105,19 @@ cd ~/kubernetes-platform-infrastructure/packer/k3s-node
 packer build .
 
 # Then redeploy from laptop
+cd terraform-libvirt
+./scripts/destroy-cluster.sh
+docker compose run --rm terraform apply
 ```
 
 **Access cluster:**
 ```bash
-# Via kubectl
+# Via kubectl (requires SSH tunnel - see setup script above)
 export KUBECONFIG=~/.kube/kpi.yaml
 kubectl get nodes
 
-# Via SSH (troubleshooting)
-ssh ubuntu@192.168.122.10
+# Via SSH (direct access through ProxyJump)
+ssh kpi-cp-01
 sudo k3s kubectl get nodes
 ```
 
