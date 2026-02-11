@@ -10,6 +10,12 @@ resource "random_password" "k3s_token" {
   special = false
 }
 
+# Generate SSH keypair for inter-VM communication (bastion -> control plane)
+resource "tls_private_key" "inter_vm" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
 # Base volume (built by Packer, imported into Terraform state)
 #
 # Bootstrap Process:
@@ -44,11 +50,12 @@ resource "libvirt_cloudinit_disk" "control_plane" {
   name      = "k3s-cp-${format("%02d", count.index + 1)}-cloudinit.iso"
   pool      = var.libvirt_pool
   user_data = templatefile("${path.module}/cloud-init/k3s-cp.yml.tpl", {
-    hostname       = "k3s-cp-${format("%02d", count.index + 1)}"
-    ssh_public_key = local.ssh_public_key
-    k3s_version    = local.k3s_version
-    k3s_token      = local.k3s_token
-    node_index     = count.index
+    hostname            = "k3s-cp-${format("%02d", count.index + 1)}"
+    ssh_public_key      = local.ssh_public_key
+    inter_vm_public_key = tls_private_key.inter_vm.public_key_openssh
+    k3s_version         = local.k3s_version
+    k3s_token           = local.k3s_token
+    node_index          = count.index
   })
   meta_data = <<-EOT
     instance-id: k3s-cp-${format("%02d", count.index + 1)}-${uuid()}
@@ -186,10 +193,12 @@ resource "libvirt_cloudinit_disk" "bastion" {
   name      = "k3s-bastion-01-cloudinit.iso"
   pool      = var.libvirt_pool
   user_data = templatefile("${path.module}/cloud-init/bastion.yml.tpl", {
-    hostname         = "k3s-bastion-01"
-    ssh_public_key   = local.ssh_public_key
-    k3s_version      = local.k3s_version
-    control_plane_ip = "192.168.122.10"
+    hostname             = "k3s-bastion-01"
+    ssh_public_key       = local.ssh_public_key
+    inter_vm_private_key = tls_private_key.inter_vm.private_key_pem
+    inter_vm_public_key  = tls_private_key.inter_vm.public_key_openssh
+    k3s_version          = local.k3s_version
+    control_plane_ip     = "192.168.122.10"
   })
   meta_data = <<-EOT
     instance-id: k3s-bastion-01-${uuid()}

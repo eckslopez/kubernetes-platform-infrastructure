@@ -38,6 +38,14 @@ packages:
   - jq
   - git
 
+# Write inter-VM SSH private key for accessing control plane
+write_files:
+  - path: /home/ubuntu/.ssh/inter_vm_key
+    owner: ubuntu:ubuntu
+    permissions: '0600'
+    content: |
+      ${indent(6, inter_vm_private_key)}
+
 # Install cluster management tools
 runcmd:
   - |
@@ -76,11 +84,12 @@ runcmd:
     # Setup kubeconfig for ubuntu user
     echo "Setting up kubeconfig..."
     mkdir -p /home/ubuntu/.kube
+    chown -R ubuntu:ubuntu /home/ubuntu/.kube
 
     # Wait for control plane to be ready and fetch kubeconfig
     echo "Waiting for k3s control plane..."
-    for i in {1..60}; do
-      if ssh -o StrictHostKeyChecking=no -o BatchMode=yes ubuntu@${control_plane_ip} 'sudo cat /etc/rancher/k3s/k3s.yaml' 2>/dev/null > /home/ubuntu/.kube/config; then
+    for i in $(seq 1 60); do
+      if ssh -i /home/ubuntu/.ssh/inter_vm_key -o StrictHostKeyChecking=no -o BatchMode=yes ubuntu@${control_plane_ip} 'sudo cat /etc/rancher/k3s/k3s.yaml' 2>/dev/null > /home/ubuntu/.kube/config; then
         # Update server URL to use control plane IP
         sed -i 's/127.0.0.1/${control_plane_ip}/g' /home/ubuntu/.kube/config
         chmod 600 /home/ubuntu/.kube/config

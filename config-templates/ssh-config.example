@@ -5,9 +5,9 @@
 #   - <HYPERVISOR_IP>: Your hypervisor's IP address (e.g., 192.168.1.11)
 #   - <USER>: Your username on the hypervisor (e.g., xlopez)
 
-# All KPI cluster hosts (wildcard pattern)
+# All k3s cluster hosts (wildcard pattern)
 # VMs are ephemeral (rebuilt frequently), so suppress host key warnings
-Host kpi-*
+Host k3s-*
   User ubuntu
   ProxyJump <USER>@<HYPERVISOR_IP>
   StrictHostKeyChecking no
@@ -15,24 +15,24 @@ Host kpi-*
   LogLevel ERROR
 
 # Control plane
-Host kpi-cp-01
+Host k3s-cp-01
   HostName 192.168.122.10
 
 # Worker nodes
-Host kpi-worker-01
+Host k3s-worker-01
   HostName 192.168.122.11
 
-Host kpi-worker-02
+Host k3s-worker-02
   HostName 192.168.122.12
 
 # Bastion host (jump box for cluster access)
-Host kpi-bastion-01
+Host k3s-bastion-01
   HostName 192.168.122.13
 
 # Usage examples:
-#   ssh kpi-bastion-01                    # Access bastion (run kubectl here)
-#   ssh kpi-cp-01                          # Access control plane directly
-#   ssh kpi-worker-01                      # Access worker node directly
+#   ssh k3s-bastion-01                    # Access bastion (run kubectl here)
+#   ssh k3s-cp-01                          # Access control plane directly
+#   ssh k3s-worker-01                      # Access worker node directly
 #
 # The bastion host is the recommended jump box for cluster management.
 # It has kubectl, k9s, flux, and helm pre-installed.

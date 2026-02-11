@@ -14,6 +14,7 @@ users:
     shell: /bin/bash
     ssh_authorized_keys:
       - ${ssh_public_key}
+      - ${inter_vm_public_key}
 
 # Enable password auth temporarily for debugging
 ssh_pwauth: true
@@ -106,6 +107,7 @@ runcmd:
       --write-kubeconfig-mode 644 \
       --disable=traefik \
       --tls-san=127.0.0.1 \
+      --tls-san=192.168.122.10 \
       --node-name=${hostname}
     
     # Wait for k3s to be ready

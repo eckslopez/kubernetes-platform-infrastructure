@@ -33,7 +33,7 @@ if [ ! -f "$KUBECONFIG_PATH" ]; then
     mkdir -p "$(dirname "$KUBECONFIG_PATH")"
 
     # Fetch kubeconfig from control plane (via laptop's ProxyJump)
-    ssh kpi-cp-01 'sudo cat /etc/rancher/k3s/k3s.yaml' > "$KUBECONFIG_PATH"
+    ssh k3s-cp-01 'sudo cat /etc/rancher/k3s/k3s.yaml' > "$KUBECONFIG_PATH"
 
     # Update server to localhost (for tunnel)
     sed -i.bak 's/server: https:\/\/.*:6443/server: https:\/\/127.0.0.1:6443/g' "$KUBECONFIG_PATH"
@@ -51,7 +51,7 @@ fi
 
 echo "Starting SSH tunnel through bastion..."
 # SSH tunnel: laptop:6443 → bastion → control-plane:6443
-ssh -f -N -L 6443:192.168.122.10:6443 kpi-bastion-01
+ssh -f -N -L 6443:192.168.122.10:6443 k3s-bastion-01
 
 # Find the tunnel PID
 TUNNEL_PID=$(ps aux | grep '[s]sh -f -N -L 6443:192.168.122.10:6443' | awk '{print $2}')
@@ -73,5 +73,5 @@ echo "To stop the tunnel:"
 echo "  kill $TUNNEL_PID"
 echo "  rm $TUNNEL_PID_FILE"
 echo ""
-echo "Note: With --tls-san=127.0.0.1, TLS verification works correctly (no insecure-skip needed)"
+echo "Note: With --tls-san=127.0.0.1 and --tls-san=192.168.122.10, TLS verification works correctly (no insecure-skip needed)"
 echo ""

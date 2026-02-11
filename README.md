@@ -39,14 +39,14 @@ docker compose run --rm terraform apply
 # 7. Setup SSH config (one-time, before first SSH)
 # Copy config-templates/ssh-config.example to ~/.ssh/config
 # Update <HYPERVISOR_IP> and <USER> placeholders
-# Uses wildcard pattern for clean access to all kpi-* hosts
+# Uses wildcard pattern for clean access to all k3s-* hosts
 
 # 8. Check cloud-init completion
-ssh kpi-cp-01 'cloud-init status --wait'
+ssh k3s-cp-01 'cloud-init status --wait'
 # Output when done: status: done
 
 # 9. Verify cluster is operational
-ssh kpi-cp-01 'sudo k3s kubectl get nodes'
+ssh k3s-cp-01 'sudo k3s kubectl get nodes'
 # All 3 nodes should show Ready status
 
 # 10. Setup kubectl access from laptop via bastion (~1 second)
@@ -65,7 +65,7 @@ k3s-worker-02   Ready    <none>          7m    v1.34.3+k3s1
 
 **Alternative: Use kubectl directly on bastion:**
 ```bash
-ssh kpi-bastion-01
+ssh k3s-bastion-01
 kubectl get nodes  # kubeconfig pre-configured
 k9s               # interactive cluster management
 ```
@@ -103,10 +103,12 @@ k9s               # interactive cluster management
 **Deployment:**
 - Packer builds Ubuntu base image
 - Terraform provisions VMs via libvirt provider
+- Terraform generates inter-VM SSH keypair for bastion → control plane communication
 - cloud-init installs k3s (cluster) or tools (bastion)
+- Bastion cloud-init automatically fetches kubeconfig from control plane during provisioning
 
 **Tools on Bastion:**
-- kubectl (cluster management)
+- kubectl (cluster management, pre-configured)
 - k9s (cluster TUI)
 - flux CLI (GitOps)
 - helm (package manager)
@@ -169,8 +171,8 @@ cd terraform-libvirt
 docker compose run --rm terraform apply
 
 # 3. Verify nodes are ready
-ssh kpi-cp-01 'cloud-init status --wait'
-ssh kpi-cp-01 'sudo k3s kubectl get nodes'
+ssh k3s-cp-01 'cloud-init status --wait'
+ssh k3s-cp-01 'sudo k3s kubectl get nodes'
 
 # 4. kubectl should still work (tunnel persists)
 kubectl get nodes
@@ -194,7 +196,7 @@ docker compose run --rm terraform apply
 **Access cluster:**
 ```bash
 # RECOMMENDED: Via bastion host (production pattern)
-ssh kpi-bastion-01
+ssh k3s-bastion-01
 kubectl get nodes  # kubeconfig pre-configured
 k9s                # interactive cluster TUI
 
@@ -203,7 +205,7 @@ export KUBECONFIG=~/.kube/kpi.yaml
 kubectl get nodes
 
 # Direct SSH to control plane (for debugging)
-ssh kpi-cp-01
+ssh k3s-cp-01
 sudo k3s kubectl get nodes
 
 # From hypervisor (emergency access)
@@ -235,9 +237,33 @@ sudo k3s kubectl get nodes
 
 After cluster is operational:
 
-1. **Bootstrap Flux GitOps** - Platform services management
-2. **Deploy Big Bang** - DoD DevSecOps baseline (GitLab, ArgoCD, Istio, monitoring)
-3. **Onboard tenant applications** - Deploy apps via ArgoCD
+1. **Verify bastion kubectl access** - Kubeconfig auto-configured during cloud-init
+   ```bash
+   ssh k3s-bastion-01 'kubectl get nodes'
+   ```
+
+2. **Bootstrap Flux GitOps** - Platform services management
+   ```bash
+   # SSH to bastion
+   ssh k3s-bastion-01
+
+   # Clone gitops repository
+   git clone git@github.com:zavestudios/gitops.git
+   cd gitops
+
+   # Bootstrap Flux (requires GitHub PAT)
+   flux bootstrap github \
+     --owner=zavestudios \
+     --repository=gitops \
+     --branch=main \
+     --path=clusters/sandbox
+
+   # Verify Flux installation
+   kubectl get pods -n flux-system
+   ```
+
+3. **Deploy Big Bang** - DoD DevSecOps baseline (GitLab, ArgoCD, Istio, monitoring)
+4. **Onboard tenant applications** - Deploy apps via ArgoCD
 
 See [ZaveStudios roadmap](https://github.com/zavestudios/zavestudios#current-status) for current phase status.
 
