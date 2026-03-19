@@ -1,4 +1,4 @@
-.PHONY: help image cluster-up cluster-down clean validate
+.PHONY: help image cluster-up cluster-down clean validate vault-auto-unseal-plan vault-auto-unseal-apply vault-auto-unseal-output
 
 # Colors for output
 GREEN  := \033[0;32m
@@ -9,6 +9,7 @@ NC     := \033[0m # No Color
 # Paths
 PACKER_DIR := packer/k3s-node
 TERRAFORM_DIR := terraform-libvirt
+VAULT_AUTO_UNSEAL_DIR := terraform-aws-vault-auto-unseal
 
 help: ## Show this help message
 	@echo "$(GREEN)k3s Home Lab - Make Targets$(NC)"
@@ -21,6 +22,8 @@ validate: ## Validate Packer and Terraform configurations
 	cd $(PACKER_DIR) && packer validate .
 	@echo "$(GREEN)Validating Terraform configuration...$(NC)"
 	cd $(TERRAFORM_DIR) && terraform init -backend=false && terraform validate
+	@echo "$(GREEN)Validating Vault auto-unseal Terraform configuration...$(NC)"
+	cd $(VAULT_AUTO_UNSEAL_DIR) && terraform init -backend=false && terraform validate
 	@echo "$(GREEN)✓ All configurations valid$(NC)"
 
 image: ## Build base VM image with Packer
@@ -57,3 +60,19 @@ clean: cluster-down ## Remove cluster and base image
 cluster-status: ## Show cluster status
 	@echo "$(GREEN)Cluster Status:$(NC)"
 	@cd $(TERRAFORM_DIR) && terraform show | grep -A 2 "network_interfaces"
+
+vault-auto-unseal-plan: ## Plan AWS resources for Vault auto-unseal
+	@if [ ! -f $(VAULT_AUTO_UNSEAL_DIR)/terraform.tfvars ]; then \
+		echo "$(RED)Error: $(VAULT_AUTO_UNSEAL_DIR)/terraform.tfvars not found$(NC)"; \
+		echo "$(YELLOW)Copy terraform.tfvars.example and configure your settings:$(NC)"; \
+		echo "  cp $(VAULT_AUTO_UNSEAL_DIR)/terraform.tfvars.example $(VAULT_AUTO_UNSEAL_DIR)/terraform.tfvars"; \
+		exit 1; \
+	fi
+	cd $(VAULT_AUTO_UNSEAL_DIR) && terraform init
+	cd $(VAULT_AUTO_UNSEAL_DIR) && terraform plan -out=tfplan
+
+vault-auto-unseal-apply: ## Apply AWS resources for Vault auto-unseal
+	cd $(VAULT_AUTO_UNSEAL_DIR) && terraform apply tfplan
+
+vault-auto-unseal-output: ## Show AWS outputs for Vault auto-unseal
+	@cd $(VAULT_AUTO_UNSEAL_DIR) && terraform output

@@ -1,0 +1,10 @@
+# Copy to terraform.tfvars and customize for your environment.
+
+aws_region  = "us-west-2"
+name_prefix = "zavestudios-onprem-vault"
+
+tags = {
+  environment = "on-prem"
+  owner       = "zavestudios"
+  workload    = "vault"
+}

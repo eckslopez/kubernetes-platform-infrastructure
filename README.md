@@ -83,6 +83,30 @@ k9s               # interactive cluster management
 - **Production patterns**: Bastion architecture, network isolation, proper TLS
 - **Reproducible**: Destroy and recreate identical cluster in ~5 minutes
 
+## Vault Auto-Unseal AWS Bootstrap
+
+This repository also contains a separate Terraform surface for the AWS trust-anchor resources needed by Vault auto-unseal in the current on-prem environment:
+
+- [terraform-aws-vault-auto-unseal](terraform-aws-vault-auto-unseal)
+
+This is intentionally separate from `terraform-libvirt`:
+
+- `terraform-libvirt` provisions the local libvirt-based cluster
+- `terraform-aws-vault-auto-unseal` provisions the external AWS KMS and IAM resources that Vault will use for unseal
+
+**Run manually by human:**
+
+```bash
+cd terraform-aws-vault-auto-unseal
+cp terraform.tfvars.example terraform.tfvars
+terraform init
+terraform plan -out=tfplan
+terraform apply tfplan
+terraform output
+```
+
+The resulting outputs will be consumed later in `gitops` when wiring Vault to AWS KMS.
+
 ## Architecture
 
 **Bastion Pattern:**
