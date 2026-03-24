@@ -46,9 +46,9 @@ resource "libvirt_volume" "control_plane" {
 }
 
 resource "libvirt_cloudinit_disk" "control_plane" {
-  count     = var.control_plane_count
-  name      = "k3s-cp-${format("%02d", count.index + 1)}-cloudinit.iso"
-  pool      = var.libvirt_pool
+  count = var.control_plane_count
+  name  = "k3s-cp-${format("%02d", count.index + 1)}-cloudinit.iso"
+  pool  = var.libvirt_pool
   user_data = templatefile("${path.module}/cloud-init/k3s-cp.yml.tpl", {
     hostname            = "k3s-cp-${format("%02d", count.index + 1)}"
     ssh_public_key      = local.ssh_public_key
@@ -57,7 +57,7 @@ resource "libvirt_cloudinit_disk" "control_plane" {
     k3s_token           = local.k3s_token
     node_index          = count.index
   })
-  meta_data = <<-EOT
+  meta_data      = <<-EOT
     instance-id: k3s-cp-${format("%02d", count.index + 1)}-${uuid()}
     local-hostname: k3s-cp-${format("%02d", count.index + 1)}
   EOT
@@ -118,17 +118,17 @@ resource "libvirt_volume" "worker" {
 }
 
 resource "libvirt_cloudinit_disk" "worker" {
-  count     = var.worker_count
-  name      = "k3s-worker-${format("%02d", count.index + 1)}-cloudinit.iso"
-  pool      = var.libvirt_pool
+  count = var.worker_count
+  name  = "k3s-worker-${format("%02d", count.index + 1)}-cloudinit.iso"
+  pool  = var.libvirt_pool
   user_data = templatefile("${path.module}/cloud-init/k3s-worker.yml.tpl", {
     hostname         = "k3s-worker-${format("%02d", count.index + 1)}"
     ssh_public_key   = local.ssh_public_key
     k3s_version      = local.k3s_version
     k3s_token        = local.k3s_token
-    control_plane_ip = "192.168.122.10"  # Changed to static IP
+    control_plane_ip = "192.168.122.10" # Changed to static IP
   })
-  meta_data = <<-EOT
+  meta_data      = <<-EOT
     instance-id: k3s-worker-${format("%02d", count.index + 1)}-${uuid()}
     local-hostname: k3s-worker-${format("%02d", count.index + 1)}
   EOT
@@ -186,12 +186,12 @@ resource "libvirt_volume" "bastion" {
   pool           = var.libvirt_pool
   base_volume_id = libvirt_volume.base.id
   # Size inherited from base volume (80GB) - must be >= base volume size
-  format         = "qcow2"
+  format = "qcow2"
 }
 
 resource "libvirt_cloudinit_disk" "bastion" {
-  name      = "k3s-bastion-01-cloudinit.iso"
-  pool      = var.libvirt_pool
+  name = "k3s-bastion-01-cloudinit.iso"
+  pool = var.libvirt_pool
   user_data = templatefile("${path.module}/cloud-init/bastion.yml.tpl", {
     hostname             = "k3s-bastion-01"
     ssh_public_key       = local.ssh_public_key
@@ -200,7 +200,7 @@ resource "libvirt_cloudinit_disk" "bastion" {
     k3s_version          = local.k3s_version
     control_plane_ip     = "192.168.122.10"
   })
-  meta_data = <<-EOT
+  meta_data      = <<-EOT
     instance-id: k3s-bastion-01-${uuid()}
     local-hostname: k3s-bastion-01
   EOT
@@ -249,4 +249,72 @@ resource "libvirt_domain" "bastion" {
   qemu_agent = false
 
   depends_on = [libvirt_domain.control_plane]
+}
+
+# Shared PostgreSQL VM
+resource "libvirt_volume" "postgres" {
+  count          = var.postgres_enabled ? 1 : 0
+  name           = "${var.postgres_hostname}.qcow2"
+  pool           = var.libvirt_pool
+  base_volume_id = libvirt_volume.base.id
+  size           = var.postgres_disk_size
+  format         = "qcow2"
+}
+
+resource "libvirt_cloudinit_disk" "postgres" {
+  count = var.postgres_enabled ? 1 : 0
+  name  = "${var.postgres_hostname}-cloudinit.iso"
+  pool  = var.libvirt_pool
+  user_data = templatefile("${path.module}/cloud-init/postgres.yml.tpl", {
+    hostname       = var.postgres_hostname
+    ssh_public_key = local.ssh_public_key
+  })
+  meta_data      = <<-EOT
+    instance-id: ${var.postgres_hostname}-${uuid()}
+    local-hostname: ${var.postgres_hostname}
+  EOT
+  network_config = <<-EOT
+    version: 2
+    ethernets:
+      ens3:
+        addresses:
+          - ${var.postgres_ip}/24
+        routes:
+          - to: default
+            via: 192.168.122.1
+        nameservers:
+          addresses: [8.8.8.8, 1.1.1.1]
+  EOT
+}
+
+resource "libvirt_domain" "postgres" {
+  count  = var.postgres_enabled ? 1 : 0
+  name   = var.postgres_hostname
+  memory = var.postgres_memory
+  vcpu   = var.postgres_vcpu
+
+  cloudinit = libvirt_cloudinit_disk.postgres[0].id
+
+  disk {
+    volume_id = libvirt_volume.postgres[0].id
+  }
+
+  network_interface {
+    network_name   = var.libvirt_network
+    wait_for_lease = false
+  }
+
+  console {
+    type        = "pty"
+    target_port = "0"
+    target_type = "serial"
+  }
+
+  graphics {
+    type        = "spice"
+    listen_type = "address"
+    autoport    = true
+  }
+
+  qemu_agent = false
 }

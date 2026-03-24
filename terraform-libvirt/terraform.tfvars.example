@@ -23,6 +23,14 @@ control_plane_memory = 10240  # Memory in MB (10GB)
 worker_vcpu   = 6      # vCPUs per worker node
 worker_memory = 10240  # Memory in MB (10GB)
 
+# Optional Shared PostgreSQL VM
+# postgres_enabled   = true
+# postgres_hostname  = "pg-01"
+# postgres_ip        = "192.168.122.20"
+# postgres_vcpu      = 4      # vCPUs
+# postgres_memory    = 8192   # Memory in MB (8GB)
+# postgres_disk_size = 128849018880  # 120GB
+
 # Disk Size (in bytes)
 disk_size = 85899345920  # 80GB
 

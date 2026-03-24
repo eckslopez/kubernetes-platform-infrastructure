@@ -94,3 +94,39 @@ variable "bastion_memory" {
   type        = number
   default     = 4096
 }
+
+variable "postgres_enabled" {
+  description = "Whether to provision the shared PostgreSQL VM"
+  type        = bool
+  default     = false
+}
+
+variable "postgres_hostname" {
+  description = "Hostname for the shared PostgreSQL VM"
+  type        = string
+  default     = "pg-01"
+}
+
+variable "postgres_ip" {
+  description = "Static IP address for the shared PostgreSQL VM"
+  type        = string
+  default     = "192.168.122.20"
+}
+
+variable "postgres_vcpu" {
+  description = "Number of vCPUs for the shared PostgreSQL VM"
+  type        = number
+  default     = 4
+}
+
+variable "postgres_memory" {
+  description = "Memory in MB for the shared PostgreSQL VM"
+  type        = number
+  default     = 8192
+}
+
+variable "postgres_disk_size" {
+  description = "Disk size in bytes for the shared PostgreSQL VM (default 120GB)"
+  type        = number
+  default     = 128849018880
+}
