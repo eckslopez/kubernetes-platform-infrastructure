@@ -319,3 +319,72 @@ resource "libvirt_domain" "postgres" {
 
   qemu_agent = false
 }
+
+# Shared Redis VM
+resource "libvirt_volume" "redis" {
+  count          = var.redis_enabled ? 1 : 0
+  name           = "${var.redis_hostname}.qcow2"
+  pool           = var.libvirt_pool
+  base_volume_id = libvirt_volume.base.id
+  size           = var.redis_disk_size
+  format         = "qcow2"
+}
+
+resource "libvirt_cloudinit_disk" "redis" {
+  count = var.redis_enabled ? 1 : 0
+  name  = "${var.redis_hostname}-cloudinit.iso"
+  pool  = var.libvirt_pool
+  user_data = templatefile("${path.module}/cloud-init/redis.yml.tpl", {
+    hostname       = var.redis_hostname
+    redis_ip       = var.redis_ip
+    ssh_public_key = local.ssh_public_key
+  })
+  meta_data      = <<-EOT
+    instance-id: ${var.redis_hostname}
+    local-hostname: ${var.redis_hostname}
+  EOT
+  network_config = <<-EOT
+    version: 2
+    ethernets:
+      ens3:
+        addresses:
+          - ${var.redis_ip}/24
+        routes:
+          - to: default
+            via: 192.168.122.1
+        nameservers:
+          addresses: [8.8.8.8, 1.1.1.1]
+  EOT
+}
+
+resource "libvirt_domain" "redis" {
+  count  = var.redis_enabled ? 1 : 0
+  name   = var.redis_hostname
+  memory = var.redis_memory
+  vcpu   = var.redis_vcpu
+
+  cloudinit = libvirt_cloudinit_disk.redis[0].id
+
+  disk {
+    volume_id = libvirt_volume.redis[0].id
+  }
+
+  network_interface {
+    network_name   = var.libvirt_network
+    wait_for_lease = false
+  }
+
+  console {
+    type        = "pty"
+    target_port = "0"
+    target_type = "serial"
+  }
+
+  graphics {
+    type        = "spice"
+    listen_type = "address"
+    autoport    = true
+  }
+
+  qemu_agent = false
+}
