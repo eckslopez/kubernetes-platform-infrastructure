@@ -23,6 +23,16 @@ kubernetes-platform-infrastructure (kpi) provides Infrastructure as Code to depl
 - Production-grade automation and patterns
 - AWS deployment capability maintained via Terraform
 
+### Shared Data Services
+
+The infrastructure layer may also provision dedicated data-service VMs outside the Kubernetes cluster.
+
+Current intended pattern:
+- shared PostgreSQL VM for tenant databases
+- shared Redis VM for tenant broker/cache workloads
+
+These VMs live on the same libvirt network as the cluster, but they remain outside Kubernetes reconciliation and outside the cluster failure domain.
+
 ---
 
 ## Cluster Architecture
@@ -54,6 +64,8 @@ Home/Office Network (192.168.1.0/24)
                 ├─ k3s-cp-01 (192.168.122.10) - static IP
                 ├─ k3s-worker-01 (192.168.122.11) - static IP
                 └─ k3s-worker-02 (192.168.122.12) - static IP
+                ├─ k3s-bastion-01 (192.168.122.13) - static IP
+                └─ pg-01 (192.168.122.20) - static IP, optional
 ```
 
 **Network configuration:**

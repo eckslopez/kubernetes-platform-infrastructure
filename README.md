@@ -78,8 +78,9 @@ k9s               # interactive cluster management
 
 - **3-node k3s cluster**: 1 control plane + 2 workers
 - **Bastion host**: Dedicated jump box with kubectl, k9s, flux, helm pre-installed
+- **Optional shared PostgreSQL VM**: Dedicated data-service host for tenant workloads
 - **Automated deployment**: Terraform + Packer + cloud-init
-- **Static networking**: Predictable IPs (192.168.122.10-13)
+- **Static networking**: Predictable IPs for cluster and shared service VMs
 - **Production patterns**: Bastion architecture, network isolation, proper TLS
 - **Reproducible**: Destroy and recreate identical cluster in ~5 minutes
 
@@ -113,11 +114,13 @@ The resulting outputs will be consumed later in `gitops` when wiring Vault to AW
 - Hypervisor: Virtualization host (192.168.1.x)
 - Bastion: Jump box with cluster tools (192.168.122.13)
 - Cluster: Isolated network (192.168.122.10-12)
+- Shared PostgreSQL VM: Optional external data-service host (192.168.122.20)
 - Access: Laptop → SSH → Bastion → Cluster
 
 **Node Specifications:**
 - Control Plane/Workers: 6 vCPUs, 10GB RAM, 80GB disk
 - Bastion: 2 vCPUs, 4GB RAM, 80GB disk (inherited from base volume)
+- Shared PostgreSQL VM: 4 vCPUs, 8GB RAM, 120GB disk (optional)
 - Ubuntu 24.04 LTS
 - k3s v1.34.3+k3s1 (pinned, with TLS SAN for 127.0.0.1)
 
@@ -133,6 +136,7 @@ The resulting outputs will be consumed later in `gitops` when wiring Vault to AW
 - Terraform provisions VMs via libvirt provider
 - Terraform generates inter-VM SSH keypair for bastion → control plane communication
 - cloud-init installs k3s (cluster) or tools (bastion)
+- cloud-init can also provision an optional shared PostgreSQL VM outside the cluster
 - Bastion cloud-init automatically fetches kubeconfig from control plane during provisioning
 
 **Tools on Bastion:**
