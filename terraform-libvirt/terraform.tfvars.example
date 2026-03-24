@@ -37,7 +37,7 @@ worker_memory = 10240  # Memory in MB (10GB)
 # redis_ip        = "192.168.122.21"
 # redis_vcpu      = 2      # vCPUs
 # redis_memory    = 4096   # Memory in MB (4GB)
-# redis_disk_size = 42949672960  # 40GB
+# redis_disk_size = 85899345920  # 80GB
 
 # Disk Size (in bytes)
 disk_size = 85899345920  # 80GB

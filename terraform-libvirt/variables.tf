@@ -162,7 +162,7 @@ variable "redis_memory" {
 }
 
 variable "redis_disk_size" {
-  description = "Disk size in bytes for the shared Redis VM (default 40GB)"
+  description = "Disk size in bytes for the shared Redis VM (default 80GB)"
   type        = number
-  default     = 42949672960
+  default     = 85899345920
 }
