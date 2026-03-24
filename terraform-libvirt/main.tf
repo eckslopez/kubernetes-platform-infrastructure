@@ -267,6 +267,7 @@ resource "libvirt_cloudinit_disk" "postgres" {
   pool  = var.libvirt_pool
   user_data = templatefile("${path.module}/cloud-init/postgres.yml.tpl", {
     hostname       = var.postgres_hostname
+    postgres_ip    = var.postgres_ip
     ssh_public_key = local.ssh_public_key
   })
   meta_data      = <<-EOT
