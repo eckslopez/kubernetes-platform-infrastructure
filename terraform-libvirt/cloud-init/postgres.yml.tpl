@@ -42,6 +42,21 @@ write_files:
       Shared PostgreSQL host for tenant workloads.
       This VM provides the platform-owned Postgres runtime only.
       Tenant databases, roles, and grants are managed separately by the pg platform-service.
+  - path: /etc/postgresql/16/main/conf.d/99-zavestudios-network.conf
+    permissions: "0644"
+    content: |
+      listen_addresses = '${postgres_ip}'
+  - path: /etc/postgresql/16/main/pg_hba.conf
+    permissions: "0640"
+    content: |
+      # PostgreSQL Client Authentication Configuration File
+      # Managed by cloud-init for the shared PostgreSQL host.
+
+      local   all             postgres                                peer
+      local   all             all                                     peer
+      host    all             all             127.0.0.1/32            scram-sha-256
+      host    all             all             ::1/128                 scram-sha-256
+      host    all             all             192.168.122.0/24        scram-sha-256
 
 runcmd:
   - |
