@@ -130,3 +130,39 @@ variable "postgres_disk_size" {
   type        = number
   default     = 128849018880
 }
+
+variable "redis_enabled" {
+  description = "Whether to provision the shared Redis VM"
+  type        = bool
+  default     = false
+}
+
+variable "redis_hostname" {
+  description = "Hostname for the shared Redis VM"
+  type        = string
+  default     = "redis-01"
+}
+
+variable "redis_ip" {
+  description = "Static IP address for the shared Redis VM"
+  type        = string
+  default     = "192.168.122.21"
+}
+
+variable "redis_vcpu" {
+  description = "Number of vCPUs for the shared Redis VM"
+  type        = number
+  default     = 2
+}
+
+variable "redis_memory" {
+  description = "Memory in MB for the shared Redis VM"
+  type        = number
+  default     = 4096
+}
+
+variable "redis_disk_size" {
+  description = "Disk size in bytes for the shared Redis VM (default 40GB)"
+  type        = number
+  default     = 42949672960
+}

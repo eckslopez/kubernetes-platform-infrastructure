@@ -65,7 +65,8 @@ Home/Office Network (192.168.1.0/24)
                 ├─ k3s-worker-01 (192.168.122.11) - static IP
                 └─ k3s-worker-02 (192.168.122.12) - static IP
                 ├─ k3s-bastion-01 (192.168.122.13) - static IP
-                └─ pg-01 (192.168.122.20) - static IP, optional
+                ├─ pg-01 (192.168.122.20) - static IP, optional
+                └─ redis-01 (192.168.122.21) - static IP, optional
 ```
 
 **Network configuration:**

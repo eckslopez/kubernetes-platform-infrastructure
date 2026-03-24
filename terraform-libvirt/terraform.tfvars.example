@@ -31,6 +31,14 @@ worker_memory = 10240  # Memory in MB (10GB)
 # postgres_memory    = 8192   # Memory in MB (8GB)
 # postgres_disk_size = 128849018880  # 120GB
 
+# Optional Shared Redis VM
+# redis_enabled   = true
+# redis_hostname  = "redis-01"
+# redis_ip        = "192.168.122.21"
+# redis_vcpu      = 2      # vCPUs
+# redis_memory    = 4096   # Memory in MB (4GB)
+# redis_disk_size = 42949672960  # 40GB
+
 # Disk Size (in bytes)
 disk_size = 85899345920  # 80GB
 
