@@ -58,7 +58,7 @@ resource "libvirt_cloudinit_disk" "control_plane" {
     node_index          = count.index
   })
   meta_data      = <<-EOT
-    instance-id: k3s-cp-${format("%02d", count.index + 1)}-${uuid()}
+    instance-id: k3s-cp-${format("%02d", count.index + 1)}
     local-hostname: k3s-cp-${format("%02d", count.index + 1)}
   EOT
   network_config = <<-EOT
@@ -129,7 +129,7 @@ resource "libvirt_cloudinit_disk" "worker" {
     control_plane_ip = "192.168.122.10" # Changed to static IP
   })
   meta_data      = <<-EOT
-    instance-id: k3s-worker-${format("%02d", count.index + 1)}-${uuid()}
+    instance-id: k3s-worker-${format("%02d", count.index + 1)}
     local-hostname: k3s-worker-${format("%02d", count.index + 1)}
   EOT
   network_config = <<-EOT
@@ -201,7 +201,7 @@ resource "libvirt_cloudinit_disk" "bastion" {
     control_plane_ip     = "192.168.122.10"
   })
   meta_data      = <<-EOT
-    instance-id: k3s-bastion-01-${uuid()}
+    instance-id: k3s-bastion-01
     local-hostname: k3s-bastion-01
   EOT
   network_config = <<-EOT
@@ -270,7 +270,7 @@ resource "libvirt_cloudinit_disk" "postgres" {
     ssh_public_key = local.ssh_public_key
   })
   meta_data      = <<-EOT
-    instance-id: ${var.postgres_hostname}-${uuid()}
+    instance-id: ${var.postgres_hostname}
     local-hostname: ${var.postgres_hostname}
   EOT
   network_config = <<-EOT
