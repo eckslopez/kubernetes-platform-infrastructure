@@ -293,6 +293,7 @@ resource "libvirt_domain" "postgres" {
   name   = var.postgres_hostname
   memory = var.postgres_memory
   vcpu   = var.postgres_vcpu
+  autostart = true
 
   cloudinit = libvirt_cloudinit_disk.postgres[0].id
 
@@ -362,6 +363,7 @@ resource "libvirt_domain" "redis" {
   name   = var.redis_hostname
   memory = var.redis_memory
   vcpu   = var.redis_vcpu
+  autostart = true
 
   cloudinit = libvirt_cloudinit_disk.redis[0].id
 
