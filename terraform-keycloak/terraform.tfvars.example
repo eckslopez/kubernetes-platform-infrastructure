@@ -1,0 +1,4 @@
+keycloak_url           = "replace-me"
+keycloak_realm         = "replace-me"
+keycloak_client_id     = "replace-me"
+keycloak_client_secret = "replace-me"
