@@ -109,6 +109,30 @@ terraform output
 
 The resulting outputs will be consumed later in `gitops` when wiring Vault to AWS KMS.
 
+## Keycloak Identity Bootstrap
+
+This repository also contains a Terraform surface for Keycloak-managed identity
+objects used by platform workloads:
+
+- [terraform-keycloak](terraform-keycloak)
+
+Current scope:
+
+- realm `zavestudios`
+- confidential OIDC client `panchito`
+
+**Run manually by human:**
+
+```bash
+cd terraform-keycloak
+cp terraform.tfvars.example terraform.tfvars
+vim terraform.tfvars
+docker compose run --rm terraform init
+docker compose run --rm terraform plan -out=tfplan
+docker compose run --rm terraform apply tfplan
+docker compose run --rm terraform output
+```
+
 ## Architecture
 
 **Bastion Pattern:**
