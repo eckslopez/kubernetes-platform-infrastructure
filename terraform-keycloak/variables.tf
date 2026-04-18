@@ -18,3 +18,9 @@ variable "keycloak_admin_client_secret" {
     description = "Admin client secret used by Terraform to authenticate to Keycloak"
     type        = string
 }
+
+variable "xavier_initial_password" {
+    description = "Initial password for xavier user (must be changed on first login)"
+    type        = string
+    sensitive   = true
+}
