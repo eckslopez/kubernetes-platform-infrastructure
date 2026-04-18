@@ -1,0 +1,35 @@
+#!/bin/bash
+# Terraform wrapper using containerized execution
+# Usage: scripts/tf <terraform-dir> <terraform-args...>
+#
+# Examples:
+#   scripts/tf terraform-cloudflare init
+#   scripts/tf terraform-cloudflare plan -out=tfplan
+#   scripts/tf terraform-cloudflare apply tfplan
+#   scripts/tf terraform-cloudflare output -raw tunnel_credentials_json
+
+set -e
+
+if [ $# -lt 1 ]; then
+  echo "Usage: scripts/tf <terraform-dir> <terraform-args...>" >&2
+  echo "" >&2
+  echo "Examples:" >&2
+  echo "  scripts/tf terraform-cloudflare init" >&2
+  echo "  scripts/tf terraform-cloudflare plan -out=tfplan" >&2
+  echo "  scripts/tf terraform-cloudflare apply tfplan" >&2
+  exit 1
+fi
+
+DIR=$1
+shift
+
+if [ ! -d "$DIR" ]; then
+  echo "Error: Directory '$DIR' does not exist" >&2
+  exit 1
+fi
+
+docker run --rm -it \
+  -v "$(pwd)/$DIR:/workspace" \
+  -w /workspace \
+  hashicorp/terraform:latest \
+  "$@"
