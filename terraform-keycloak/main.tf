@@ -3,6 +3,9 @@ resource "keycloak_realm" "zavestudios" {
   enabled           = true
   display_name      = "ZaveStudios"
   ssl_required      = "external"
+  attributes = {
+    frontendUrl = "https://sso-on-prem.zavestudios.com/auth"
+  }
 }
 
 resource "keycloak_openid_client" "panchito" {
