@@ -122,3 +122,183 @@ resource "cloudflare_record" "policyreporter_on_prem" {
   proxied = true
   comment = "Policy Reporter via Cloudflare Tunnel (on-prem)"
 }
+
+# Cloudflare Access Application for Operator UIs
+resource "cloudflare_zero_trust_access_application" "operator_uis" {
+  account_id                = var.cloudflare_account_id
+  name                      = "Platform Operator UIs"
+  domain                    = "vault-on-prem.zavestudios.com"
+  type                      = "self_hosted"
+  session_duration          = "24h"
+  auto_redirect_to_identity = false
+}
+
+# Additional domains for the Access Application
+resource "cloudflare_zero_trust_access_application" "argocd" {
+  account_id                = var.cloudflare_account_id
+  name                      = "ArgoCD"
+  domain                    = "argocd-on-prem.zavestudios.com"
+  type                      = "self_hosted"
+  session_duration          = "24h"
+  auto_redirect_to_identity = false
+}
+
+resource "cloudflare_zero_trust_access_application" "grafana" {
+  account_id                = var.cloudflare_account_id
+  name                      = "Grafana"
+  domain                    = "grafana-on-prem.zavestudios.com"
+  type                      = "self_hosted"
+  session_duration          = "24h"
+  auto_redirect_to_identity = false
+}
+
+resource "cloudflare_zero_trust_access_application" "prometheus" {
+  account_id                = var.cloudflare_account_id
+  name                      = "Prometheus"
+  domain                    = "prometheus-on-prem.zavestudios.com"
+  type                      = "self_hosted"
+  session_duration          = "24h"
+  auto_redirect_to_identity = false
+}
+
+resource "cloudflare_zero_trust_access_application" "alertmanager" {
+  account_id                = var.cloudflare_account_id
+  name                      = "Alertmanager"
+  domain                    = "alertmanager-on-prem.zavestudios.com"
+  type                      = "self_hosted"
+  session_duration          = "24h"
+  auto_redirect_to_identity = false
+}
+
+resource "cloudflare_zero_trust_access_application" "loki" {
+  account_id                = var.cloudflare_account_id
+  name                      = "Loki"
+  domain                    = "loki-on-prem.zavestudios.com"
+  type                      = "self_hosted"
+  session_duration          = "24h"
+  auto_redirect_to_identity = false
+}
+
+resource "cloudflare_zero_trust_access_application" "kiali" {
+  account_id                = var.cloudflare_account_id
+  name                      = "Kiali"
+  domain                    = "kiali-on-prem.zavestudios.com"
+  type                      = "self_hosted"
+  session_duration          = "24h"
+  auto_redirect_to_identity = false
+}
+
+resource "cloudflare_zero_trust_access_application" "policyreporter" {
+  account_id                = var.cloudflare_account_id
+  name                      = "Policy Reporter"
+  domain                    = "policyreporter-on-prem.zavestudios.com"
+  type                      = "self_hosted"
+  session_duration          = "24h"
+  auto_redirect_to_identity = false
+}
+
+# Access Policy for Operator UIs - Vault
+resource "cloudflare_zero_trust_access_policy" "operator_uis_policy" {
+  application_id = cloudflare_zero_trust_access_application.operator_uis.id
+  account_id     = var.cloudflare_account_id
+  name           = "Allow Operators"
+  precedence     = 1
+  decision       = "allow"
+
+  include {
+    email = var.operator_emails
+  }
+}
+
+# Access Policy for ArgoCD
+resource "cloudflare_zero_trust_access_policy" "argocd_policy" {
+  application_id = cloudflare_zero_trust_access_application.argocd.id
+  account_id     = var.cloudflare_account_id
+  name           = "Allow Operators"
+  precedence     = 1
+  decision       = "allow"
+
+  include {
+    email = var.operator_emails
+  }
+}
+
+# Access Policy for Grafana
+# NOTE: Grafana has a reusable policy created during onboarding that cannot be easily managed via Terraform
+# Manage this policy manually in the Cloudflare UI for now
+# resource "cloudflare_zero_trust_access_policy" "grafana_policy" {
+#   application_id = cloudflare_zero_trust_access_application.grafana.id
+#   account_id     = var.cloudflare_account_id
+#   name           = "Allow Operators"
+#   precedence     = 1
+#   decision       = "allow"
+#
+#   include {
+#     email = var.operator_emails
+#   }
+# }
+
+# Access Policy for Prometheus
+resource "cloudflare_zero_trust_access_policy" "prometheus_policy" {
+  application_id = cloudflare_zero_trust_access_application.prometheus.id
+  account_id     = var.cloudflare_account_id
+  name           = "Allow Operators"
+  precedence     = 1
+  decision       = "allow"
+
+  include {
+    email = var.operator_emails
+  }
+}
+
+# Access Policy for Alertmanager
+resource "cloudflare_zero_trust_access_policy" "alertmanager_policy" {
+  application_id = cloudflare_zero_trust_access_application.alertmanager.id
+  account_id     = var.cloudflare_account_id
+  name           = "Allow Operators"
+  precedence     = 1
+  decision       = "allow"
+
+  include {
+    email = var.operator_emails
+  }
+}
+
+# Access Policy for Loki
+resource "cloudflare_zero_trust_access_policy" "loki_policy" {
+  application_id = cloudflare_zero_trust_access_application.loki.id
+  account_id     = var.cloudflare_account_id
+  name           = "Allow Operators"
+  precedence     = 1
+  decision       = "allow"
+
+  include {
+    email = var.operator_emails
+  }
+}
+
+# Access Policy for Kiali
+resource "cloudflare_zero_trust_access_policy" "kiali_policy" {
+  application_id = cloudflare_zero_trust_access_application.kiali.id
+  account_id     = var.cloudflare_account_id
+  name           = "Allow Operators"
+  precedence     = 1
+  decision       = "allow"
+
+  include {
+    email = var.operator_emails
+  }
+}
+
+# Access Policy for Policy Reporter
+resource "cloudflare_zero_trust_access_policy" "policyreporter_policy" {
+  application_id = cloudflare_zero_trust_access_application.policyreporter.id
+  account_id     = var.cloudflare_account_id
+  name           = "Allow Operators"
+  precedence     = 1
+  decision       = "allow"
+
+  include {
+    email = var.operator_emails
+  }
+}

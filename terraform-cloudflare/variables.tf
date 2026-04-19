@@ -19,3 +19,8 @@ variable "tunnel_name" {
   type        = string
   default     = "zavestudios-on-prem"
 }
+
+variable "operator_emails" {
+  description = "List of email addresses allowed to access operator UIs via Cloudflare Access"
+  type        = list(string)
+}

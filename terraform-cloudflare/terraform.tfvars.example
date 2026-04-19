@@ -1,4 +1,5 @@
 cloudflare_api_token  = "your-cloudflare-api-token-here"
 cloudflare_account_id = "your-cloudflare-account-id"
-cloudflare_zone_id    = "your-zone-id-for-zavestudios-com"
-tunnel_name           = "zavestudios-on-prem"
+cloudflare_zone_id    = "your-zone-id-"
+tunnel_name           = "your-tunnel-name"
+operator_emails       = ["operator@example.com"]
