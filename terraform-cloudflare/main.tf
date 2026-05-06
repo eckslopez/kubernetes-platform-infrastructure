@@ -123,6 +123,15 @@ resource "cloudflare_record" "policyreporter_on_prem" {
   comment = "Policy Reporter via Cloudflare Tunnel (on-prem)"
 }
 
+resource "cloudflare_record" "airflow_on_prem" {
+  zone_id = var.cloudflare_zone_id
+  name    = "airflow-on-prem"
+  content  = "${cloudflare_zero_trust_tunnel_cloudflared.zavestudios_on_prem.id}.cfargotunnel.com"
+  type    = "CNAME"
+  proxied = true
+  comment = "Airflow UI via Cloudflare Tunnel (on-prem)"
+}
+
 # Cloudflare Access Application for Operator UIs
 resource "cloudflare_zero_trust_access_application" "operator_uis" {
   account_id                = var.cloudflare_account_id
@@ -192,6 +201,15 @@ resource "cloudflare_zero_trust_access_application" "policyreporter" {
   account_id                = var.cloudflare_account_id
   name                      = "Policy Reporter"
   domain                    = "policyreporter-on-prem.zavestudios.com"
+  type                      = "self_hosted"
+  session_duration          = "24h"
+  auto_redirect_to_identity = false
+}
+
+resource "cloudflare_zero_trust_access_application" "airflow" {
+  account_id                = var.cloudflare_account_id
+  name                      = "Airflow"
+  domain                    = "airflow-on-prem.zavestudios.com"
   type                      = "self_hosted"
   session_duration          = "24h"
   auto_redirect_to_identity = false
@@ -293,6 +311,18 @@ resource "cloudflare_zero_trust_access_policy" "kiali_policy" {
 # Access Policy for Policy Reporter
 resource "cloudflare_zero_trust_access_policy" "policyreporter_policy" {
   application_id = cloudflare_zero_trust_access_application.policyreporter.id
+  account_id     = var.cloudflare_account_id
+  name           = "Allow Operators"
+  precedence     = 1
+  decision       = "allow"
+
+  include {
+    email = var.operator_emails
+  }
+}
+
+resource "cloudflare_zero_trust_access_policy" "airflow_policy" {
+  application_id = cloudflare_zero_trust_access_application.airflow.id
   account_id     = var.cloudflare_account_id
   name           = "Allow Operators"
   precedence     = 1
