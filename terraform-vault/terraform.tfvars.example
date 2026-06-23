@@ -1,0 +1,24 @@
+# Copy to terraform.tfvars and fill in values before running.
+
+vault_address  = "https://vault-on-prem.zavestudios.com"
+vault_token    = "hvs.REPLACE_WITH_OPERATOR_TOKEN"
+kubernetes_host = "https://REPLACE_WITH_K8S_API_HOST"
+
+# Defaults match the current platform configuration; override only if changed.
+# kubernetes_auth_mount        = "kubernetes"
+# vault_reader_service_account = "vault-reader"
+# vault_reader_namespace       = "platform"
+
+# ---------------------------------------------------------------------------
+# Importing existing Vault state
+# Run these import commands once before the first plan/apply.
+# Exact policy names must match whatever is currently in Vault.
+# ---------------------------------------------------------------------------
+#
+# terraform import vault_policy.platform platform
+# terraform import vault_policy.listings_ingest listings-ingest
+# terraform import vault_policy.mia mia
+# terraform import vault_policy.oracle oracle
+# terraform import vault_policy.panchito panchito
+# terraform import vault_policy.rigoberta rigoberta
+# terraform import vault_kubernetes_auth_backend_role.external_secrets kubernetes/role/external-secrets
